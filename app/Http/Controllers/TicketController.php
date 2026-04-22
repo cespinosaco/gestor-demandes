@@ -14,21 +14,53 @@ use Inertia\Inertia;
 
 class TicketController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Ticket::with([
+        $query = Ticket::with([
             'creator',
             'assignee',
             'area',
             'category',
             'status',
             'priority',
-        ])
-        ->latest()
-        ->get();
+        ])->latest();
+
+        if ($request->filled('status_id')) {
+            $query->where('status_id', $request->status_id);
+        }
+
+        if ($request->filled('area_id')) {
+            $query->where('area_id', $request->area_id);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('assigned_to')) {
+            if ($request->assigned_to === 'unassigned') {
+                $query->whereNull('assigned_to');
+            } else {
+                $query->where('assigned_to', $request->assigned_to);
+            }
+        }
+
+        $tickets = $query->get();
 
         return Inertia::render('Tickets/Index', [
             'tickets' => $tickets,
+            'filters' => [
+                'status_id' => $request->status_id ?? '',
+                'area_id' => $request->area_id ?? '',
+                'category_id' => $request->category_id ?? '',
+                'assigned_to' => $request->assigned_to ?? '',
+            ],
+            'statuses' => TicketStatus::where('active', true)->orderBy('name')->get(),
+            'areas' => Area::orderBy('name')->get(),
+            'categories' => Category::where('active', true)->orderBy('name')->get(),
+            'users' => User::whereHas('role', function ($q) {
+                $q->where('name', 'unitat_web');
+            })->orderBy('name')->get(),
         ]);
     }
 
