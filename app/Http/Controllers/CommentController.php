@@ -16,11 +16,16 @@ class CommentController extends Controller
             'is_internal' => ['nullable', 'boolean'],
         ]);
 
+        $user = auth()->user();
+        $role = $user->role?->name;
+
+        $isInternalAllowed = in_array($role, ['unitat_web', 'admin']);
+
         Comment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
             'content' => $validated['content'],
-            'is_internal' => $validated['is_internal'] ?? false,
+            'is_internal' => $isInternalAllowed ? ($validated['is_internal'] ?? false) : false,
         ]);
 
         TicketHistory::create([

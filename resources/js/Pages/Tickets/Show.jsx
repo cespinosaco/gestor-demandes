@@ -1,6 +1,6 @@
 import { Link, router, useForm } from "@inertiajs/react";
 
-export default function Show({ ticket, statuses, users }) {
+export default function Show({ ticket, statuses, users, currentUserRole }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         content: "",
         is_internal: false,
@@ -16,7 +16,16 @@ export default function Show({ ticket, statuses, users }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("tickets.comments.store", ticket.id), {
+
+        const payload = {
+            ...data,
+            is_internal:
+                currentUserRole === "unitat_web" || currentUserRole === "admin"
+                    ? data.is_internal
+                    : false,
+        };
+
+        router.post(route("tickets.comments.store", ticket.id), payload, {
             onSuccess: () => reset(),
         });
     };
@@ -80,97 +89,108 @@ export default function Show({ ticket, statuses, users }) {
                     {ticket.assignee?.name ?? "Sense assignar"}
                 </p>
 
-                <div style={{ marginTop: "20px" }}>
-                    <label>
-                        <strong>Assignar ticket:</strong>
-                    </label>
+                {(currentUserRole === "unitat_web" ||
+                    currentUserRole === "admin") && (
+                    <div style={{ marginTop: "20px" }}>
+                        <label>
+                            <strong>Assignar ticket:</strong>
+                        </label>
 
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "10px",
-                            marginTop: "8px",
-                        }}
-                    >
-                        <select
-                            value={assignForm.data.assigned_to}
-                            onChange={(e) =>
-                                assignForm.setData(
-                                    "assigned_to",
-                                    e.target.value,
-                                )
-                            }
-                            style={{ padding: "8px", minWidth: "220px" }}
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "10px",
+                                marginTop: "8px",
+                            }}
                         >
-                            <option value="">Sense assignar</option>
-                            {users.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                    {user.name}
-                                </option>
-                            ))}
-                        </select>
+                            <select
+                                value={assignForm.data.assigned_to}
+                                onChange={(e) =>
+                                    assignForm.setData(
+                                        "assigned_to",
+                                        e.target.value,
+                                    )
+                                }
+                                style={{ padding: "8px", minWidth: "220px" }}
+                            >
+                                <option value="">Sense assignar</option>
+                                {users.map((user) => (
+                                    <option key={user.id} value={user.id}>
+                                        {user.name}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <button
-                            type="button"
-                            onClick={updateAssignment}
-                            disabled={assignForm.processing}
-                            style={{ padding: "8px 14px" }}
-                        >
-                            {assignForm.processing ? "Guardant..." : "Assignar"}
-                        </button>
-                    </div>
-
-                    {assignForm.errors.assigned_to && (
-                        <div style={{ color: "red", marginTop: "8px" }}>
-                            {assignForm.errors.assigned_to}
+                            <button
+                                type="button"
+                                onClick={updateAssignment}
+                                disabled={assignForm.processing}
+                                style={{ padding: "8px 14px" }}
+                            >
+                                {assignForm.processing
+                                    ? "Guardant..."
+                                    : "Assignar"}
+                            </button>
                         </div>
-                    )}
-                </div>
 
-                <div style={{ marginTop: "20px" }}>
-                    <label>
-                        <strong>Canviar estat:</strong>
-                    </label>
-
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "10px",
-                            marginTop: "8px",
-                        }}
-                    >
-                        <select
-                            value={statusForm.data.status_id}
-                            onChange={(e) =>
-                                statusForm.setData("status_id", e.target.value)
-                            }
-                            style={{ padding: "8px", minWidth: "220px" }}
-                        >
-                            {statuses.map((status) => (
-                                <option key={status.id} value={status.id}>
-                                    {status.name}
-                                </option>
-                            ))}
-                        </select>
-
-                        <button
-                            type="button"
-                            onClick={updateStatus}
-                            disabled={statusForm.processing}
-                            style={{ padding: "8px 14px" }}
-                        >
-                            {statusForm.processing
-                                ? "Guardant..."
-                                : "Actualitzar estat"}
-                        </button>
+                        {assignForm.errors.assigned_to && (
+                            <div style={{ color: "red", marginTop: "8px" }}>
+                                {assignForm.errors.assigned_to}
+                            </div>
+                        )}
                     </div>
+                )}
 
-                    {statusForm.errors.status_id && (
-                        <div style={{ color: "red", marginTop: "8px" }}>
-                            {statusForm.errors.status_id}
+                {(currentUserRole === "unitat_web" ||
+                    currentUserRole === "admin") && (
+                    <div style={{ marginTop: "20px" }}>
+                        <label>
+                            <strong>Canviar estat:</strong>
+                        </label>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "10px",
+                                marginTop: "8px",
+                            }}
+                        >
+                            <select
+                                value={statusForm.data.status_id}
+                                onChange={(e) =>
+                                    statusForm.setData(
+                                        "status_id",
+                                        e.target.value,
+                                    )
+                                }
+                                style={{ padding: "8px", minWidth: "220px" }}
+                            >
+                                {statuses.map((status) => (
+                                    <option key={status.id} value={status.id}>
+                                        {status.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                type="button"
+                                onClick={updateStatus}
+                                disabled={statusForm.processing}
+                                style={{ padding: "8px 14px" }}
+                            >
+                                {statusForm.processing
+                                    ? "Guardant..."
+                                    : "Actualitzar estat"}
+                            </button>
                         </div>
-                    )}
-                </div>
+
+                        {statusForm.errors.status_id && (
+                            <div style={{ color: "red", marginTop: "8px" }}>
+                                {statusForm.errors.status_id}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <h2 style={{ marginTop: "30px" }}>Comentaris</h2>
@@ -180,7 +200,18 @@ export default function Show({ ticket, statuses, users }) {
             ) : (
                 <div style={{ marginBottom: "30px" }}>
                     {ticket.comments.map((comment) => (
-                        <div key={comment.id} style={commentStyle}>
+                        <div
+                            key={comment.id}
+                            style={{
+                                ...commentStyle,
+                                backgroundColor: comment.is_internal
+                                    ? "#fff8e1"
+                                    : "#fff",
+                                borderLeft: comment.is_internal
+                                    ? "4px solid #e0a800"
+                                    : "1px solid #ddd",
+                            }}
+                        >
                             <p style={{ margin: 0 }}>
                                 <strong>
                                     {comment.user?.name ?? "Usuari"}
@@ -215,18 +246,21 @@ export default function Show({ ticket, statuses, users }) {
                     )}
                 </div>
 
-                <div style={{ marginBottom: "15px" }}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={data.is_internal}
-                            onChange={(e) =>
-                                setData("is_internal", e.target.checked)
-                            }
-                        />{" "}
-                        Comentari intern
-                    </label>
-                </div>
+                {(currentUserRole === "unitat_web" ||
+                    currentUserRole === "admin") && (
+                    <div style={{ marginBottom: "15px" }}>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={data.is_internal}
+                                onChange={(e) =>
+                                    setData("is_internal", e.target.checked)
+                                }
+                            />{" "}
+                            Comentari intern
+                        </label>
+                    </div>
+                )}
 
                 <button
                     type="submit"

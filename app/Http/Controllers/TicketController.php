@@ -109,34 +109,43 @@ class TicketController extends Controller
     }
 
     public function show(Ticket $ticket)
-    {
-        $user = auth()->user();
-        $role = $user->role?->name;
+{
+    $user = auth()->user();
+    $role = $user->role?->name;
 
-        if ($role === 'editor' && $ticket->created_by !== $user->id) {
-            abort(403);
-        }
-        $ticket->load([
-            'creator',
-            'assignee',
-            'area',
-            'category',
-            'status',
-            'priority',
-            'comments.user',
-            'history.user',
-        ]);
-
-        return Inertia::render('Tickets/Show', [
-            'ticket' => $ticket,
-            'statuses' => TicketStatus::where('active', true)->orderBy('id')->get(),
-
-            // NOMÉS usuaris de la Unitat Web
-            'users' => User::whereHas('role', function ($q) {
-                $q->where('name', 'unitat_web');
-            })->get(),
-        ]);
+    if ($role === 'editor' && $ticket->created_by !== $user->id) {
+        abort(403);
     }
+
+    $ticket->load([
+        'creator',
+        'assignee',
+        'area',
+        'category',
+        'status',
+        'priority',
+        'history.user',
+    ]);
+
+    $ticket->load([
+        'comments' => function ($query) use ($role) {
+            if ($role === 'editor') {
+                $query->where('is_internal', false);
+            }
+
+            $query->with('user')->latest();
+        },
+    ]);
+
+    return Inertia::render('Tickets/Show', [
+        'ticket' => $ticket,
+        'statuses' => TicketStatus::where('active', true)->orderBy('id')->get(),
+        'users' => User::whereHas('role', function ($q) {
+            $q->where('name', 'unitat_web');
+        })->orderBy('name')->get(),
+        'currentUserRole' => $role,
+    ]);
+}
 
     public function updateStatus(Request $request, Ticket $ticket)
     {
