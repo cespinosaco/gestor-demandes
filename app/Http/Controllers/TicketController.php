@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Priority;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -80,6 +81,11 @@ class TicketController extends Controller
         return Inertia::render('Tickets/Show', [
             'ticket' => $ticket,
             'statuses' => TicketStatus::where('active', true)->orderBy('id')->get(),
+
+            // NOMÉS usuaris de la Unitat Web
+            'users' => User::whereHas('role', function ($q) {
+                $q->where('name', 'unitat_web');
+            })->get(),
         ]);
     }
 
@@ -100,6 +106,19 @@ class TicketController extends Controller
             $ticket->closed_at = null;
         }
 
+        $ticket->save();
+
+        return redirect()->route('tickets.show', $ticket->id, status: 303);
+    }
+
+    // assignació
+    public function assign(Request $request, Ticket $ticket)
+    {
+        $validated = $request->validate([
+            'assigned_to' => ['nullable', 'exists:users,id'],
+        ]);
+
+        $ticket->assigned_to = $validated['assigned_to'];
         $ticket->save();
 
         return redirect()->route('tickets.show', $ticket->id, status: 303);

@@ -44,4 +44,6 @@ Route::get('/dashboard-tickets', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard.tickets');
 
+Route::patch('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+
 require __DIR__.'/auth.php';

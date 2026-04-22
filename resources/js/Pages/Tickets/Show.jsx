@@ -1,6 +1,6 @@
 import { Link, router, useForm } from "@inertiajs/react";
 
-export default function Show({ ticket, statuses }) {
+export default function Show({ ticket, statuses, users }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         content: "",
         is_internal: false,
@@ -8,6 +8,10 @@ export default function Show({ ticket, statuses }) {
 
     const statusForm = useForm({
         status_id: ticket.status_id ?? "",
+    });
+
+    const assignForm = useForm({
+        assigned_to: ticket.assigned_to ?? "",
     });
 
     const submit = (e) => {
@@ -22,6 +26,18 @@ export default function Show({ ticket, statuses }) {
             `/tickets/${ticket.id}/status`,
             {
                 status_id: statusForm.data.status_id,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const updateAssignment = () => {
+        router.patch(
+            `/tickets/${ticket.id}/assign`,
+            {
+                assigned_to: assignForm.data.assigned_to || null,
             },
             {
                 preserveScroll: true,
@@ -63,6 +79,53 @@ export default function Show({ ticket, statuses }) {
                     <strong>Assignat a:</strong>{" "}
                     {ticket.assignee?.name ?? "Sense assignar"}
                 </p>
+
+                <div style={{ marginTop: "20px" }}>
+                    <label>
+                        <strong>Assignar ticket:</strong>
+                    </label>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "10px",
+                            marginTop: "8px",
+                        }}
+                    >
+                        <select
+                            value={assignForm.data.assigned_to}
+                            onChange={(e) =>
+                                assignForm.setData(
+                                    "assigned_to",
+                                    e.target.value,
+                                )
+                            }
+                            style={{ padding: "8px", minWidth: "220px" }}
+                        >
+                            <option value="">Sense assignar</option>
+                            {users.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.name}
+                                </option>
+                            ))}
+                        </select>
+
+                        <button
+                            type="button"
+                            onClick={updateAssignment}
+                            disabled={assignForm.processing}
+                            style={{ padding: "8px 14px" }}
+                        >
+                            {assignForm.processing ? "Guardant..." : "Assignar"}
+                        </button>
+                    </div>
+
+                    {assignForm.errors.assigned_to && (
+                        <div style={{ color: "red", marginTop: "8px" }}>
+                            {assignForm.errors.assigned_to}
+                        </div>
+                    )}
+                </div>
 
                 <div style={{ marginTop: "20px" }}>
                     <label>
