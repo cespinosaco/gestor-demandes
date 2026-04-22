@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\Category;
 use App\Models\Priority;
 use App\Models\Ticket;
+use App\Models\TicketHistory;
 use App\Models\TicketStatus;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -76,6 +77,7 @@ class TicketController extends Controller
             'status',
             'priority',
             'comments.user',
+            'history.user',
         ]);
 
         return Inertia::render('Tickets/Show', [
@@ -108,6 +110,15 @@ class TicketController extends Controller
 
         $ticket->save();
 
+        $statusName = TicketStatus::where('id', $validated['status_id'])->value('name');
+
+        TicketHistory::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => auth()->id(),
+            'action_type' => 'status_changed',
+            'description' => 'S’ha canviat l’estat del ticket a: ' . $statusName,
+        ]);
+
         return redirect()->route('tickets.show', $ticket->id, status: 303);
     }
 
@@ -120,6 +131,21 @@ class TicketController extends Controller
 
         $ticket->assigned_to = $validated['assigned_to'];
         $ticket->save();
+
+        $assignedUserName = null;
+
+        if ($validated['assigned_to']) {
+            $assignedUserName = User::where('id', $validated['assigned_to'])->value('name');
+        }
+
+        TicketHistory::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => auth()->id(),
+            'action_type' => 'assigned',
+            'description' => $assignedUserName
+                ? 'S’ha assignat el ticket a: ' . $assignedUserName
+                : 'S’ha desassignat el ticket',
+        ]);
 
         return redirect()->route('tickets.show', $ticket->id, status: 303);
     }

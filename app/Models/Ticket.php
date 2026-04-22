@@ -56,4 +56,9 @@ class Ticket extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function history()
+{
+    return $this->hasMany(TicketHistory::class)->latest();
+}
 }

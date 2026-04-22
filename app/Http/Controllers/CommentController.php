@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Models\TicketHistory;
 use Illuminate\Http\Request;
 
 class CommentController extends Controller
@@ -22,6 +23,13 @@ class CommentController extends Controller
             'is_internal' => $validated['is_internal'] ?? false,
         ]);
 
-        return redirect()->route('tickets.show', $ticket->id);
+        TicketHistory::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => auth()->id(),
+            'action_type' => 'comment_added',
+            'description' => 'S’ha afegit un comentari al ticket.',
+        ]);
+
+        return redirect()->route('tickets.show', $ticket->id, status: 303);
     }
 }

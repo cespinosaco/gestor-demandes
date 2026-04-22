@@ -236,6 +236,25 @@ export default function Show({ ticket, statuses, users }) {
                     {processing ? "Guardant..." : "Afegir comentari"}
                 </button>
             </form>
+            <h2 style={{ marginTop: "30px" }}>Historial d’activitat</h2>
+
+            {ticket.history.length === 0 ? (
+                <p>No hi ha activitat registrada encara.</p>
+            ) : (
+                <div style={{ marginBottom: "30px" }}>
+                    {ticket.history.map((item) => (
+                        <div key={item.id} style={commentStyle}>
+                            <p style={{ margin: 0 }}>
+                                <strong>{item.user?.name ?? "Sistema"}</strong>
+                            </p>
+                            <p style={{ margin: "8px 0" }}>
+                                {item.description}
+                            </p>
+                            <small>{item.action_type}</small>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
