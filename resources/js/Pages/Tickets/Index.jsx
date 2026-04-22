@@ -37,6 +37,12 @@ export default function Index({
     };
     return (
         <div style={{ padding: "20px" }}>
+            <button
+                onClick={() => router.post(route("logout"))}
+                style={{ marginBottom: "20px" }}
+            >
+                Logout
+            </button>
             <h1>Llistat de tickets</h1>
             <p style={{ marginBottom: "20px" }}>
                 <Link href={route("tickets.create")}>+ Nou ticket</Link>

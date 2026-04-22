@@ -16,6 +16,9 @@ class TicketController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $role = $user->role?->name;
+
         $query = Ticket::with([
             'creator',
             'assignee',
@@ -25,6 +28,12 @@ class TicketController extends Controller
             'priority',
         ])->latest();
 
+        // Permisos
+        if ($role === 'editor') {
+        $query->where('created_by', $user->id);
+        }
+
+        // Filtres
         if ($request->filled('status_id')) {
             $query->where('status_id', $request->status_id);
         }
@@ -101,6 +110,12 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket)
     {
+        $user = auth()->user();
+        $role = $user->role?->name;
+
+        if ($role === 'editor' && $ticket->created_by !== $user->id) {
+            abort(403);
+        }
         $ticket->load([
             'creator',
             'assignee',
