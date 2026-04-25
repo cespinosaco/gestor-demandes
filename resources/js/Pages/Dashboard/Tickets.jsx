@@ -1,59 +1,140 @@
 import { Link } from "@inertiajs/react";
 
-export default function Dashboard({ total, open, closed, byStatus }) {
+export default function TicketsDashboard({
+    stats,
+    byStatus,
+    byCategory,
+    byArea,
+}) {
     return (
-        <div style={{ padding: "20px" }}>
-            <h1>Dashboard de tickets</h1>
-
+        <div className="page-container">
             <p style={{ marginBottom: "20px" }}>
-                <Link href={route("tickets.index")}>← Tornar als tickets</Link>
+                <Link href={route("tickets.index")} className="btn-secondary">
+                    ← Tornar al llistat de tickets
+                </Link>
             </p>
 
+            <header style={headerStyle}>
+                <p style={eyebrowStyle}>Indicadors de seguiment</p>
+                <h1 style={{ margin: 0 }}>Dashboard de tickets</h1>
+                <p style={introStyle}>
+                    Resum visual de l’activitat del sistema per facilitar el
+                    seguiment de demandes i la millora contínua del servei web.
+                </p>
+            </header>
+
             <div style={gridStyle}>
-                <Card title="Total tickets" value={total} />
-                <Card title="Oberts" value={open} />
-                <Card title="Tancats / resolts" value={closed} />
+                <MetricCard title="Total de tickets" value={stats.total} />
+                <MetricCard title="Tickets oberts" value={stats.open} />
+                <MetricCard title="Resolts / tancats" value={stats.closed} />
+                <MetricCard
+                    title="% resolució"
+                    value={`${stats.resolutionRate}%`}
+                    highlight
+                />
             </div>
 
-            <h2 style={{ marginTop: "40px" }}>Distribució per estat</h2>
-
-            <div style={{ marginTop: "20px" }}>
-                {byStatus.map((status) => (
-                    <div key={status.id} style={rowStyle}>
-                        <strong>{status.name}</strong>
-                        <span>{status.tickets_count}</span>
-                    </div>
-                ))}
+            <div style={sectionsGridStyle}>
+                <Section title="Distribució per estat" items={byStatus} />
+                <Section title="Tickets per categoria" items={byCategory} />
+                <Section title="Tickets per àrea" items={byArea} />
             </div>
         </div>
     );
 }
 
-function Card({ title, value }) {
+function MetricCard({ title, value, highlight = false }) {
     return (
-        <div style={cardStyle}>
-            <p style={{ margin: 0 }}>{title}</p>
-            <h2>{value}</h2>
-        </div>
+        <article className="card">
+            <p style={cardTitleStyle}>{title}</p>
+            <h2
+                style={{
+                    ...cardValueStyle,
+                    color: highlight
+                        ? "var(--color-success)"
+                        : "var(--color-primary)",
+                }}
+            >
+                {value}
+            </h2>
+        </article>
     );
 }
 
-const gridStyle = {
-    display: "flex",
-    gap: "20px",
+function Section({ title, items }) {
+    return (
+        <section className="card">
+            <h2 style={sectionTitleStyle}>{title}</h2>
+
+            {items.length === 0 ? (
+                <p>No hi ha dades disponibles.</p>
+            ) : (
+                <div>
+                    {items.map((item) => (
+                        <div key={item.id} style={rowStyle}>
+                            <span>{item.name}</span>
+                            <strong>{item.tickets_count}</strong>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </section>
+    );
+}
+
+const headerStyle = {
+    marginBottom: "24px",
 };
 
-const cardStyle = {
-    border: "1px solid #ddd",
-    padding: "20px",
-    borderRadius: "8px",
-    minWidth: "180px",
-    backgroundColor: "#fafafa",
+const eyebrowStyle = {
+    margin: "0 0 6px",
+    color: "var(--color-muted)",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    fontSize: "13px",
+    letterSpacing: "0.04em",
+};
+
+const introStyle = {
+    maxWidth: "720px",
+    color: "var(--color-muted)",
+    lineHeight: 1.6,
+    marginTop: "10px",
+};
+
+const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+    gap: "16px",
+    marginBottom: "24px",
+};
+
+const sectionsGridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "16px",
+};
+
+const cardTitleStyle = {
+    margin: 0,
+    color: "var(--color-muted)",
+    fontWeight: 600,
+};
+
+const cardValueStyle = {
+    margin: "10px 0 0",
+    fontSize: "32px",
+};
+
+const sectionTitleStyle = {
+    margin: 0,
+    marginBottom: "16px",
 };
 
 const rowStyle = {
     display: "flex",
     justifyContent: "space-between",
-    padding: "10px",
-    borderBottom: "1px solid #eee",
+    gap: "16px",
+    padding: "12px 0",
+    borderBottom: "1px solid var(--color-border)",
 };
