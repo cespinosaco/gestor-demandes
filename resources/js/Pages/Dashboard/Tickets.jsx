@@ -5,6 +5,7 @@ export default function TicketsDashboard({
     byStatus,
     byCategory,
     byArea,
+    currentUserRole,
 }) {
     return (
         <div className="page-container">
@@ -37,7 +38,10 @@ export default function TicketsDashboard({
             <div style={sectionsGridStyle}>
                 <Section title="Distribució per estat" items={byStatus} />
                 <Section title="Tickets per categoria" items={byCategory} />
-                <Section title="Tickets per àrea" items={byArea} />
+
+                {currentUserRole !== "editor" && (
+                    <Section title="Tickets per àrea" items={byArea} />
+                )}
             </div>
         </div>
     );

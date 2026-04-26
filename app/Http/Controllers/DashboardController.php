@@ -12,29 +12,62 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $total = Ticket::count();
+        $user = auth()->user();
+        $role = $user->role?->name;
 
-        $open = Ticket::whereHas('status', function ($q) {
-            $q->whereIn('name', ['Obert', 'En curs', 'Pendent d\'informació']);
-        })->count();
+        $isEditor = $role === 'editor';
 
-        $closed = Ticket::whereHas('status', function ($q) {
-            $q->whereIn('name', ['Resolt', 'Tancat']);
-        })->count();
+        $baseQuery = Ticket::query();
+
+        if ($isEditor) {
+            $baseQuery->where('created_by', $user->id);
+        }
+
+        $total = (clone $baseQuery)->count();
+
+        $open = (clone $baseQuery)
+            ->whereHas('status', function ($q) {
+                $q->whereIn('name', ['Obert', 'En curs', 'Pendent d\'informació']);
+            })
+            ->count();
+
+        $closed = (clone $baseQuery)
+            ->whereHas('status', function ($q) {
+                $q->whereIn('name', ['Resolt', 'Tancat']);
+            })
+            ->count();
 
         $resolutionRate = $total > 0
             ? round(($closed / $total) * 100, 1)
             : 0;
 
-        $byStatus = TicketStatus::withCount('tickets')
+        $byStatus = TicketStatus::withCount([
+            'tickets' => function ($q) use ($isEditor, $user) {
+                if ($isEditor) {
+                    $q->where('created_by', $user->id);
+                }
+            }
+        ])
             ->orderByDesc('tickets_count')
             ->get();
 
-        $byCategory = Category::withCount('tickets')
+        $byCategory = Category::withCount([
+            'tickets' => function ($q) use ($isEditor, $user) {
+                if ($isEditor) {
+                    $q->where('created_by', $user->id);
+                }
+            }
+        ])
             ->orderByDesc('tickets_count')
             ->get();
 
-        $byArea = Area::withCount('tickets')
+        $byArea = Area::withCount([
+            'tickets' => function ($q) use ($isEditor, $user) {
+                if ($isEditor) {
+                    $q->where('created_by', $user->id);
+                }
+            }
+        ])
             ->orderByDesc('tickets_count')
             ->get();
 
@@ -48,6 +81,7 @@ class DashboardController extends Controller
             'byStatus' => $byStatus,
             'byCategory' => $byCategory,
             'byArea' => $byArea,
+            'currentUserRole' => $role,
         ]);
     }
 }
