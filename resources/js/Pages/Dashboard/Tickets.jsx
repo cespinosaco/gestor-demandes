@@ -26,12 +26,30 @@ export default function TicketsDashboard({
 
             <div style={gridStyle}>
                 <MetricCard title="Total de tickets" value={stats.total} />
+
                 <MetricCard title="Tickets oberts" value={stats.open} />
+
                 <MetricCard title="Resolts / tancats" value={stats.closed} />
+
                 <MetricCard
                     title="% resolució"
                     value={`${stats.resolutionRate}%`}
                     highlight
+                />
+
+                <MetricCard
+                    title="Tickets últims 30 dies"
+                    value={stats.last30Days}
+                />
+
+                <MetricCard
+                    title="Temps mig resolució"
+                    value={`${stats.averageResolutionHours} h`}
+                />
+
+                <MetricCard
+                    title="% tickets oberts"
+                    value={`${stats.openPercentage}%`}
                 />
             </div>
 

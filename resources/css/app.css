@@ -107,3 +107,20 @@ body {
     background: #e8f5e9;
     color: #1b5e20;
 }
+
+:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}

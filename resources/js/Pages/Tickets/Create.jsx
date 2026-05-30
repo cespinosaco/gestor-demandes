@@ -7,11 +7,14 @@ export default function Create({ areas, categories, priorities }) {
         area_id: "",
         category_id: "",
         priority_id: "",
+        attachments: [],
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("tickets.store"));
+        post(route("tickets.store"), {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -187,6 +190,32 @@ export default function Create({ areas, categories, priorities }) {
                         )}
                     </div>
 
+                    <div style={formGroupStyle}>
+                        <label htmlFor="attachments">Adjunts</label>
+                        <input
+                            id="attachments"
+                            type="file"
+                            multiple
+                            onChange={(e) =>
+                                setData("attachments", e.target.files)
+                            }
+                            aria-describedby="attachments-help"
+                            style={inputStyle}
+                        />
+
+                        <p id="attachments-help" style={helpTextStyle}>
+                            Pots adjuntar captures, documents o fitxers
+                            relacionats amb la demanda. Mida màxima: 5 MB per
+                            fitxer.
+                        </p>
+
+                        {errors["attachments.*"] && (
+                            <div style={errorStyle}>
+                                {errors["attachments.*"]}
+                            </div>
+                        )}
+                    </div>
+
                     <div style={actionsStyle}>
                         <Link
                             href={route("tickets.index")}
@@ -265,4 +294,10 @@ const errorStyle = {
     color: "#b00020",
     marginTop: "4px",
     fontSize: "14px",
+};
+
+const helpTextStyle = {
+    color: "var(--color-muted)",
+    fontSize: "14px",
+    marginTop: "6px",
 };

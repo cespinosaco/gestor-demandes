@@ -61,4 +61,9 @@ class Ticket extends Model
 {
     return $this->hasMany(TicketHistory::class)->latest();
 }
+
+public function attachments()
+{
+    return $this->hasMany(Attachment::class);
+}
 }

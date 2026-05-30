@@ -30,7 +30,7 @@ class TicketController extends Controller
 
         // Permisos
         if ($role === 'editor') {
-        $query->where('created_by', $user->id);
+            $query->where('created_by', $user->id);
         }
 
         // Filtres
@@ -90,11 +90,12 @@ class TicketController extends Controller
             'area_id' => ['required', 'exists:areas,id'],
             'category_id' => ['required', 'exists:categories,id'],
             'priority_id' => ['required', 'exists:priorities,id'],
+            'attachments.*' => ['nullable', 'file', 'max:5120'],
         ]);
 
         $openStatusId = TicketStatus::where('name', 'Obert')->value('id');
 
-        Ticket::create([
+        $ticket = Ticket::create([
             'created_by' => auth()->id(),
             'assigned_to' => null,
             'area_id' => $validated['area_id'],
@@ -105,47 +106,61 @@ class TicketController extends Controller
             'description' => $validated['description'],
         ]);
 
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('attachments', 'public');
+
+                $ticket->attachments()->create([
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'mime_type' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+            }
+        }
+
         return redirect()->route('tickets.index');
     }
 
     public function show(Ticket $ticket)
-{
-    $user = auth()->user();
-    $role = $user->role?->name;
+    {
+        $user = auth()->user();
+        $role = $user->role?->name;
 
-    if ($role === 'editor' && $ticket->created_by !== $user->id) {
-        abort(403);
+        if ($role === 'editor' && $ticket->created_by !== $user->id) {
+            abort(403);
+        }
+
+        $ticket->load([
+            'creator',
+            'assignee',
+            'area',
+            'category',
+            'status',
+            'priority',
+            'history.user',
+            'attachments',
+        ]);
+
+        $ticket->load([
+            'comments' => function ($query) use ($role) {
+                if ($role === 'editor') {
+                    $query->where('is_internal', false);
+                }
+
+                $query->with('user')->latest();
+            },
+        ]);
+
+        return Inertia::render('Tickets/Show', [
+            'ticket' => $ticket,
+            'statuses' => TicketStatus::where('active', true)->orderBy('id')->get(),
+            'users' => User::whereHas('role', function ($q) {
+                $q->where('name', 'unitat_web');
+            })->orderBy('name')->get(),
+            'currentUserRole' => $role,
+        ]);
     }
-
-    $ticket->load([
-        'creator',
-        'assignee',
-        'area',
-        'category',
-        'status',
-        'priority',
-        'history.user',
-    ]);
-
-    $ticket->load([
-        'comments' => function ($query) use ($role) {
-            if ($role === 'editor') {
-                $query->where('is_internal', false);
-            }
-
-            $query->with('user')->latest();
-        },
-    ]);
-
-    return Inertia::render('Tickets/Show', [
-        'ticket' => $ticket,
-        'statuses' => TicketStatus::where('active', true)->orderBy('id')->get(),
-        'users' => User::whereHas('role', function ($q) {
-            $q->where('name', 'unitat_web');
-        })->orderBy('name')->get(),
-        'currentUserRole' => $role,
-    ]);
-}
 
     public function updateStatus(Request $request, Ticket $ticket)
     {
@@ -178,7 +193,6 @@ class TicketController extends Controller
         return redirect()->route('tickets.show', $ticket->id, status: 303);
     }
 
-    // assignació
     public function assign(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([

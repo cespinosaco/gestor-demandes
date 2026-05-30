@@ -182,7 +182,39 @@ export default function Show({ ticket, statuses, users, currentUserRole }) {
                     </div>
                 )}
             </section>
+            <section className="card" style={{ marginBottom: "24px" }}>
+                <h2 style={sectionTitleStyle}>Adjunts</h2>
 
+                {!ticket.attachments || ticket.attachments.length === 0 ? (
+                    <p>No hi ha fitxers adjunts en aquest ticket.</p>
+                ) : (
+                    <div>
+                        {ticket.attachments.map((attachment) => (
+                            <div
+                                key={attachment.id}
+                                style={attachmentItemStyle}
+                            >
+                                <div>
+                                    <strong>{attachment.original_name}</strong>
+                                    <p style={attachmentMetaStyle}>
+                                        {attachment.mime_type ?? "Fitxer"} ·{" "}
+                                        {formatFileSize(attachment.size)}
+                                    </p>
+                                </div>
+
+                                <a
+                                    href={`/storage/${attachment.file_path}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="btn-secondary"
+                                >
+                                    Obrir
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
             <section className="card" style={{ marginBottom: "24px" }}>
                 <h2 style={sectionTitleStyle}>Comentaris</h2>
 
@@ -345,6 +377,18 @@ function StatusBadge({ status }) {
     return <span className={className}>{status ?? "-"}</span>;
 }
 
+function formatFileSize(size) {
+    if (!size) return "Mida desconeguda";
+
+    const kb = size / 1024;
+
+    if (kb < 1024) {
+        return `${kb.toFixed(1)} KB`;
+    }
+
+    return `${(kb / 1024).toFixed(1)} MB`;
+}
+
 const headerStyle = {
     display: "flex",
     justifyContent: "space-between",
@@ -455,5 +499,23 @@ const historyTypeStyle = {
 const errorStyle = {
     color: "#b00020",
     marginTop: "4px",
+    fontSize: "14px",
+};
+
+const attachmentItemStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "16px",
+    alignItems: "center",
+    padding: "14px",
+    border: "1px solid var(--color-border)",
+    borderRadius: "10px",
+    marginBottom: "12px",
+    background: "#f8fafc",
+};
+
+const attachmentMetaStyle = {
+    margin: "6px 0 0",
+    color: "var(--color-muted)",
     fontSize: "14px",
 };
